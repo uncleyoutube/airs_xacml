@@ -1,4 +1,4 @@
 airs_xacml
 ==========
 
-Permission module for user with AIRS
+Permission module for use with the AIRS digital library.
