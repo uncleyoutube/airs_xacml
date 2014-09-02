@@ -30,22 +30,29 @@ function airs_xacml_islandora_ingest_steps(array $form_state) {
  */
 
 function airs_xacml_apply_policy(&$form_state) {
+  // DECLARATIONS
+  global $user;
   $userAccess = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['userAccess'];
   $contributors = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['contributors'];
-  global $user;
   $object = $form_state['islandora']['objects'][0];
 
+  // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
-  $xacml->viewingRule->addUser(array($user->name, 'admin'));
-  $xacml->managementRule->addUser(array($user->name, 'admin'));
+
+  // allow the user to view and manage the file
+  // the administrative role gets this by default
+  $xacml->viewingRule->addUser(array($user->name));
+  $xacml->managementRule->addUser(array($user->name));
 
   if ($userAccess != 'User only') {
-
+    // this block is only meant to be run if User only is
+    //  not selected
     foreach ($contributors as $name) {
       $xacml->viewingRule->addUser($name['namePart']);
       $xacml->managementRule->addUser($name['namePart']);
     }
 
+    // use the userAccess field of the form to determine extra permissions
     switch($userAccess) {
       case 'Public':
         $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
@@ -58,14 +65,9 @@ function airs_xacml_apply_policy(&$form_state) {
       case 'My sub-theme':
         
         break;
-
-      case 'Specific users':
-        dpm('specific: I guess nothing is done?');
-        break;
     }
-  } else {
-    dpm('user only: definitely nothing is done');
   }
+  // save the policy
   $xacml->writeBackToFedora();
 }
 
