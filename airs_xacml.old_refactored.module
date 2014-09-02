@@ -1,0 +1,116 @@
+<?php
+
+/**
+ * Implements hook_islandora_ingest_steps
+ */
+function airs_xacml_islandora_ingest_steps(array $form_state) {
+  return array(
+    'airs_xacml_policy' => array( 
+      'type' => 'callback',
+      'weight' => 9,
+      'module' => 'airs_xacml',
+      'do_function' => array(
+        'function' => 'airs_xacml_apply_policy',
+        'args' => array(),
+      ),
+      'undo_function' => array( 
+        'function' => 'islandora_xacml_editor_undo_policy',
+        'args' => array(),
+      ),
+    ), 
+  );
+}
+
+/**
+ * Determines which value the user has selected for the userAccess
+ *   and creates the correct POLICY based on it.
+ *
+ * @param array $form_state
+ *   The passed through form_state form hook_islandora_ingest_steps().
+ */
+function airs_xacml_apply_policy(&$form_state) {
+  // set $userAccess to the value selected by the user
+  $userAccess = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['userAccess'];
+  $contributors = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['contributors'];
+  global $user;
+
+  $object = $form_state['islandora']['objects'][0];
+
+  dpm($form_state); 
+
+  // print value of $userAccess
+  switch($userAccess) {
+
+  case 'Public':
+    dpm('$userAccess should be Public');
+    $xacml = new IslandoraXacml($object);
+    $xacml->viewingRule->addUser(array($user->name, 'admin'));
+    $xacml->managementRule->addUser(array($user->name, 'admin'));
+
+    foreach ($contributors as $name) {
+      dsm('user: '.$name['namePart']);
+      $xacml->viewingRule->addUser($name['namePart']);
+      $xacml->managementRule->addUser($name['namePart']); 
+    }
+
+    $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
+    $xacml->writeBackToFedora();
+    break;
+
+  case 'Registered users':
+    dpm('$userAccess should be Registered users');
+    $xacml = new IslandoraXacml($object);
+    $xacml->viewingRule->addUser(array($user->name, 'admin'));
+    $xacml->managementRule->addUser(array($user->name, 'admin'));
+
+    foreach ($contributors as $name) {
+      dsm('user: '.$name['namePart']);
+      $xacml->viewingRule->addUser($name['namePart']);
+      $xacml->managementRule->addUser($name['namePart']); 
+    }
+
+    $xacml->viewingRule->addRole(array('anonymous user'));
+    $xacml->writeBackToFedora();
+    break;
+
+  case 'My sub-theme': 
+    dpm('$userAccess should be My sub-theme');
+    break;
+
+  case 'Specific users':
+    dpm('$userAccess should be Specific users'); 
+
+    $xacml = new IslandoraXacml($object);
+    $xacml->viewingRule->addUser(array($user->name, 'admin'));
+    $xacml->managementRule->addUser(array($user->name, 'admin'));
+  
+    foreach ($contributors as $name) {
+      dsm('user: '.$name['namePart']);
+      $xacml->viewingRule->addUser($name['namePart']);
+      $xacml->managementRule->addUser($name['namePart']); 
+    }
+
+    $xacml->writeBackToFedora();
+    break;
+
+  case 'User only':
+    dpm('$userAccess should be User only');
+    $xacml = new IslandoraXacml($object);
+    $xacml->viewingRule->addUser(array($user->name, 'admin'));
+    $xacml->managementRule->addUser(array($user->name, 'admin'));
+    $xacml->writeBackToFedora();
+    break;
+  }
+  dpm('$userAccess: '.$userAccess);
+}
+
+/*
+  ============================
+  ===== BEGIN TEST BLOCK =====
+  ============================
+*/
+
+function airs_xacml_form_alter(&$form, &$form_state, &$form_id) {
+  //dpm($form_id); // displays name of forms on the page
+  //dpm($form); // displays form information
+}
