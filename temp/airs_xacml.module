@@ -1,0 +1,27 @@
+<php
+
+/**
+ * @file
+ *
+ * Module to set XACML policies.
+ */
+
+/**
+ * Implements hook_help().
+ * 
+ * Displays help and module information.
+ * 
+ * @param path
+ *   Which path of the site we're using to display help
+ * 
+ * @param arg
+ *   Array that holds the current path as returned from arg() ftn
+ */
+
+function airs_xacml_help($path, $arg) {
+  switch($path) {
+    case "admin/help/airs-xacml":
+      return '<p>' . t("Sets each file's permissions based on the privacy setting chosen.") . '</p>';
+      break;
+  }
+}
