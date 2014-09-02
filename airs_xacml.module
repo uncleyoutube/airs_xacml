@@ -33,47 +33,40 @@ function airs_xacml_apply_policy(&$form_state) {
   $userAccess = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['userAccess'];
   $contributors = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['contributors'];
   global $user;
-  $object = $form_state['islandora']['objects'][0]
+  $object = $form_state['islandora']['objects'][0];
 
-  $xacml = airs_xacml_policy_creation($object, $userAccess);
-
-  switch($userAccess) {
-    case 'Public':
-      
-      break;
-
-    case 'Registered users':
-
-      break;
-
-    case 'My sub-theme':
-    
-      break;
-
-    case 'Specific users':
-
-      break;
-
-    case 'User only':
-
-      break;
-  }
-}
-
-/**
- * Creates a new XACML object and sets user and admin
- *  to view and manage it
- *
- * Does not write it back to Fedora
- * 
- * @param $object
- *   The object that the policy will apply to
- */
-function airs_xacml_policy_creation($object) {
   $xacml = new IslandoraXacml($object);
   $xacml->viewingRule->addUser(array($user->name, 'admin'));
   $xacml->managementRule->addUser(array($user->name, 'admin'));
-  return $xacml;
+
+  if ($userAccess != 'User only') {
+
+    foreach ($contributors as $name) {
+      $xacml->viewingRule->addUser($name['namePart']);
+      $xacml->managementRule->addUser($name['namePart']);
+    }
+
+    switch($userAccess) {
+      case 'Public':
+        $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
+        break;
+
+      case 'Registered users':
+        $xacml->viewingRule->addRole(array('anonymous user'));
+        break;
+
+      case 'My sub-theme':
+        
+        break;
+
+      case 'Specific users':
+        dpm('specific: I guess nothing is done?');
+        break;
+    }
+  } else {
+    dpm('user only: definitely nothing is done');
+  }
+  $xacml->writeBackToFedora();
 }
 
 /*
