@@ -28,6 +28,7 @@ function airs_xacml_apply_policy(&$form_state) {
   global $user;
   $userAccess = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['userAccess'];
   $contributors = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['contributors'];
+  $themes = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['themes-tags'];
   $object = $form_state['islandora']['objects'][0];
 
   // create new IslandoraXacml object, link it to the object being ingested
@@ -39,6 +40,7 @@ function airs_xacml_apply_policy(&$form_state) {
   $xacml->managementRule->addUser(array($user->name));
 
   if ($userAccess != 'User only') {
+    // grabs all users listed as collaborators
     foreach ($contributors as $name) {
       $xacml->viewingRule->addUser($name['namePart']);
       $xacml->managementRule->addUser($name['namePart']);
@@ -51,11 +53,21 @@ function airs_xacml_apply_policy(&$form_state) {
         break;
 
       case 'Registered users':
-        $xacml->viewingRule->addRole(array('anonymous user'));
+        $xacml->viewingRule->addRole(array('authenticated user'));
         break;
 
       case 'My sub-theme':
-        
+        // returns all themes listed in the AIRS Themes field
+        foreach ($themes as $theme) {
+          // checks if the listing begins with Subtheme
+          if (is_string($theme) && strlen($theme) > 6 
+              && strcmp(substr($theme, 0, 7), 'Subtheme')) {
+            $subthemeID = 'st'.substr($theme, 9, 3);
+            dpm($subthemeID);
+            $xacml->viewingRule->addRole(array($subthemeID));
+            $xacml->managementRule->addRole(array($subthemeID));
+          }
+        }
         break;
     }
   }
