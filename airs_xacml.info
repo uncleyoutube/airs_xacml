@@ -1,7 +1,7 @@
 name = AIRS XACML
 description = Sets each file's permissions based on the privacy setting chosen.
 package = Islandora
-version = "7.x-0.8"
+version = "7.x-0.9"
 core = "7.x"
 dependencies[] = islandora
 dependencies[] = islandora_xacml_editor
