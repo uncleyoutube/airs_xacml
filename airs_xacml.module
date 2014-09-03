@@ -24,9 +24,10 @@ function airs_xacml_islandora_ingest_steps(array $form_state) {
 function airs_xacml_apply_policy(&$form_state) {
   // DECLARATIONS
   global $user;
-  $userAccess = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['userAccess'];
-  $contributors = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['contributors'];
-  $themes = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['themes-tags'];
+  $formValues = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values'];
+  $userAccess = $formValues['userAccess'];
+  $contributors = $formValues['contributors'];
+  $themes = $formValues['themes-tags'];
   $object = $form_state['islandora']['objects'][0];
 
   // create new IslandoraXacml object, link it to the object being ingested
