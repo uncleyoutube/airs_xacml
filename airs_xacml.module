@@ -21,14 +21,6 @@ function airs_xacml_islandora_ingest_steps(array $form_state) {
   );
 }
 
-/**
- * Determines which value the user has selected for the userAccess
- *   and creates the correct POLICY based on it.
- *
- * @param array $form_state
- *   The passed through form_state form hook_islandora_ingest_steps().
- */
-
 function airs_xacml_apply_policy(&$form_state) {
   // DECLARATIONS
   global $user;
@@ -67,15 +59,4 @@ function airs_xacml_apply_policy(&$form_state) {
   }
   // save the policy
   $xacml->writeBackToFedora();
-}
-
-/*
-  ============================
-  ===== BEGIN TEST BLOCK =====
-  ============================
-*/
-
-function airs_xacml_form_alter(&$form, &$form_state, &$form_id) {
-  //dpm($form_id); // displays name of forms on the page
-  //dpm($form); // displays form information
 }
