@@ -45,8 +45,6 @@ function airs_xacml_apply_policy(&$form_state) {
   $xacml->managementRule->addUser(array($user->name));
 
   if ($userAccess != 'User only') {
-    // this block is only meant to be run if User only is
-    //  not selected
     foreach ($contributors as $name) {
       $xacml->viewingRule->addUser($name['namePart']);
       $xacml->managementRule->addUser($name['namePart']);
