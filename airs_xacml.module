@@ -22,6 +22,8 @@ function airs_xacml_islandora_ingest_steps(array $form_state) {
 }
 
 function airs_xacml_apply_policy(&$form_state) {
+  dpm($form_state);
+
   // DECLARATIONS
   global $user;
   $userAccess = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['userAccess'];
@@ -59,4 +61,9 @@ function airs_xacml_apply_policy(&$form_state) {
   }
   // save the policy
   $xacml->writeBackToFedora();
+}
+
+// TEST BITTY
+function airs_xacml_form_alter(&$form, &$form_state, &$form_id) {
+  //dpm($form); // prints out all forms on page as pretty hierarchy
 }
