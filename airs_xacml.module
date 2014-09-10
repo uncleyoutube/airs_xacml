@@ -39,10 +39,12 @@ function airs_xacml_apply_policy(&$form_state) {
 
   if ($userAccess != 'User only') {
     // grabs all users listed as collaborators
+    dpm('before getting contributors');
     foreach ($contributors as $name) {
       $xacml->viewingRule->addUser($name['namePart']);
       $xacml->managementRule->addUser($name['namePart']);
     }
+    dpm('after getting contributors');
 
     // use the userAccess field of the form to determine extra permissions
     switch($userAccess) {
@@ -55,19 +57,29 @@ function airs_xacml_apply_policy(&$form_state) {
         break;
 
       case 'My sub-theme':
+        dpm('@ case \'My sub-theme\' beginning');
         // returns all themes listed in the AIRS Themes field
+        $i=0;
         foreach ($themes as $theme) {
           // checks if the listing begins with Subtheme
-          if (is_string($theme) && strlen($theme) > 6 
-              && strcmp(substr($theme, 0, 7), 'Subtheme')) {
-            $subthemeID = 'st'.substr($theme, 9, 3); 
-            $xacml->viewingRule->addRole(array($subthemeID));
-            $xacml->managementRule->addRole(array($subthemeID));
+          if (is_string($theme)) {
+            if (strcmp(substr($theme, 0, 7), 'Subtheme')) {
+              $subthemeID = 'st'.substr($theme, 9, 3); 
+              $xacml->viewingRule->addRole(array($subthemeID));
+              $xacml->managementRule->addRole(array($subthemeID));
+            } else if (strcmp(substr($theme, 0, 5), 'Theme')) {
+              $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
+            }             
+          } else {
+            dpm($theme.' is not a valid subtheme.');
           }
         }
-        break;
+        
+      dpm('@ case \'My sub-theme\' end');
+      break;
     }
   }
   // save the policy
+  dpm('at policy saving step');
   $xacml->writeBackToFedora();
 }
