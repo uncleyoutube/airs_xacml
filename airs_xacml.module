@@ -29,6 +29,8 @@ function airs_xacml_apply_policy(&$form_state) {
   $themes = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['themes-tags'];
   $object = $form_state['islandora']['objects'][0];
 
+  dpm($form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['themes-tags']);
+
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
 
@@ -56,32 +58,30 @@ function airs_xacml_apply_policy(&$form_state) {
         $xacml->viewingRule->addRole(array('authenticated user'));
         break;
 
+     /**
+      * In the case of 'My sub-theme', if the uploader chooses one of the main
+      *  themes (e.g. Theme 1, 2, 3), the file is publicly viewable, with management
+      *  permissions for everyone in any subtheme chosen.
+      */
       case 'My sub-theme':
-        dpm('@ case \'My sub-theme\' beginning');
         // returns all themes listed in the AIRS Themes field
-        $i=0;
         foreach ($themes as $theme) {
-          // checks if the listing begins with Subtheme or Theme
+          // checks if the listing is a string, then if begins with Subtheme or Theme
           if (is_string($theme)) {
-            if (strcmp(substr($theme, 0, 7), 'Subtheme')) {
-              dpm('Subtheme comparison clause');
+            if (substr($theme, 0, 8) == 'Subtheme') {
               $subthemeID = 'st'.substr($theme, 9, 3); 
               $xacml->viewingRule->addRole(array($subthemeID));
               $xacml->managementRule->addRole(array($subthemeID));
-            } elseif (strcmp(substr($theme, 0, 5), 'Theme')) {
-              dpm('Theme comparison clause');
+            } else if (substr($theme, 0, 5) == 'Theme') {
               $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
-            }             
-          } else {
-            dpm($theme.' is not a valid subtheme.');
-          }
+            } else {
+              dpm($theme.' is not a valid subtheme');
+            } 
+          } 
         }
-        
-      dpm('@ case \'My sub-theme\' end');
       break;
     }
   }
   // save the policy
-  dpm('at policy saving step');
   $xacml->writeBackToFedora();
 }
