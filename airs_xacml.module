@@ -67,7 +67,7 @@ function airs_xacml_apply_policy(&$form_state) {
         // returns all themes listed in the AIRS Themes field
         foreach ($themes as $theme) {
           // checks if the listing is a string, then if begins with Subtheme or Theme
-          if (is_string($theme)) {
+          if (is_string($theme) && strlen($theme) > 5) {
             if (substr($theme, 0, 8) == 'Subtheme') {
               $subthemeID = 'st'.substr($theme, 9, 3); 
               $xacml->viewingRule->addRole(array($subthemeID));
