@@ -61,13 +61,15 @@ function airs_xacml_apply_policy(&$form_state) {
         // returns all themes listed in the AIRS Themes field
         $i=0;
         foreach ($themes as $theme) {
-          // checks if the listing begins with Subtheme
+          // checks if the listing begins with Subtheme or Theme
           if (is_string($theme)) {
             if (strcmp(substr($theme, 0, 7), 'Subtheme')) {
+              dpm('Subtheme comparison clause');
               $subthemeID = 'st'.substr($theme, 9, 3); 
               $xacml->viewingRule->addRole(array($subthemeID));
               $xacml->managementRule->addRole(array($subthemeID));
-            } else if (strcmp(substr($theme, 0, 5), 'Theme')) {
+            } elseif (strcmp(substr($theme, 0, 5), 'Theme')) {
+              dpm('Theme comparison clause');
               $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
             }             
           } else {
