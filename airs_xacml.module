@@ -29,8 +29,6 @@ function airs_xacml_apply_policy(&$form_state) {
   $themes = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['themes-tags'];
   $object = $form_state['islandora']['objects'][0];
 
-  dpm($form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['themes-tags']);
-
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
 
@@ -41,12 +39,10 @@ function airs_xacml_apply_policy(&$form_state) {
 
   if ($userAccess != 'User only') {
     // grabs all users listed as collaborators
-    dpm('before getting contributors');
     foreach ($contributors as $name) {
       $xacml->viewingRule->addUser($name['namePart']);
       $xacml->managementRule->addUser($name['namePart']);
     }
-    dpm('after getting contributors');
 
     // use the userAccess field of the form to determine extra permissions
     switch($userAccess) {
