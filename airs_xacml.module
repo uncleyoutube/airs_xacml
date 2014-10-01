@@ -36,9 +36,6 @@ function airs_xacml_apply_policy(&$form_state) {
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
 
-  dpm($form_state);
-  dpm($xacml);
-
   // allow the user to view and manage the file
   // the administrative role gets this by default
   $xacml->viewingRule->addUser(array($user->name));
@@ -47,8 +44,8 @@ function airs_xacml_apply_policy(&$form_state) {
   if ($userAccess != 'User only') {
     // grabs all users listed as collaborators
     foreach ($contributors as $name) {
-      $xacml->viewingRule->addUser($name['namePart']);
-      $xacml->managementRule->addUser($name['namePart']);
+      $xacml->viewingRule->addUser(array($name['namePart']));
+      $xacml->managementRule->addUser(array($name['namePart']));
     }
 
     // use the userAccess field of the form to determine extra permissions
@@ -71,7 +68,7 @@ function airs_xacml_apply_policy(&$form_state) {
         foreach ($themes as $theme) {
           // checks if the listing is a string, then if begins with Subtheme or Theme
           if (is_string($theme) && strlen($theme) > 5) {
-            if (substr($theme, 0, 8) == 'Subtheme') {
+            if (substr($theme, 0, 8) == 'Subtheme') { 
               $subthemeID = 'st'.substr($theme, 9, 3); 
               $xacml->viewingRule->addRole(array($subthemeID));
               $xacml->managementRule->addRole(array($subthemeID));
