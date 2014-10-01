@@ -11,7 +11,7 @@ function airs_xacml_islandora_ingest_steps(array $form_state) {
   return array(
     'airs_xacml_policy' => array(
       'type'=> 'callback',
-      'weight' => 9, 
+      'weight' => 9,
       'module' => 'airs_xacml',
       'do_function' => array(
         'function' => 'airs_xacml_apply_policy',
@@ -33,6 +33,9 @@ function airs_xacml_apply_policy(&$form_state) {
   $themes = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['themes-tags'];
   $object = $form_state['islandora']['objects'][0];
 
+  drupal_set_message($object);
+  drupal_set_message($userAccess);
+
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
 
@@ -43,10 +46,12 @@ function airs_xacml_apply_policy(&$form_state) {
   // the administrative role gets this by default
   $xacml->viewingRule->addUser(array($user->name));
   $xacml->managementRule->addUser(array($user->name));
-
+  
   if ($userAccess != 'User only') {
+    drupal_set_message('Collaborators:');
     // grabs all users listed as collaborators
     foreach ($contributors as $name) {
+      drupal_set_message($name['namePart']);
       $xacml->viewingRule->addUser($name['namePart']);
       $xacml->managementRule->addUser($name['namePart']);
     }
@@ -67,18 +72,27 @@ function airs_xacml_apply_policy(&$form_state) {
       *  permissions for everyone in any subtheme chosen.
       */
       case 'My sub-theme':
+        drupal_set_message('subthemes');
         // returns all themes listed in the AIRS Themes field
         foreach ($themes as $theme) {
           // checks if the listing is a string, then if begins with Subtheme or Theme
           if (is_string($theme) && strlen($theme) > 5) {
+            drupal_set_message($theme);
             if (substr($theme, 0, 8) == 'Subtheme') {
-              $subthemeID = 'st'.substr($theme, 9, 3); 
+              $subthemeID = 'st'.substr($theme, 9, 3);
               $xacml->viewingRule->addRole(array($subthemeID));
               $xacml->managementRule->addRole(array($subthemeID));
             } else if (substr($theme, 0, 5) == 'Theme') {
               $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
+<<<<<<< HEAD
             }
           } 
+=======
+            } else {
+              drupal_set_message($theme.' is not a valid subtheme');
+            }
+          }
+>>>>>>> 43cb3883f91f10fa3ba83885bd52142d9354c3da
         }
       break;
     }
@@ -87,4 +101,5 @@ function airs_xacml_apply_policy(&$form_state) {
   dpm($xacml->viewingRule);
   dpm($xacml->managementRule);
   $xacml->writeBackToFedora();
+  drupal_set_message('policy saved (hopefully)');
 }
