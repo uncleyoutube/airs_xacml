@@ -1,5 +1,9 @@
 <?php
 
+module_load_include('inc', 'islandora', 'includes/tuque');
+module_load_include('inc', 'islandora', 'includes/tuque_wrapper');
+module_load_include('inc', 'islandora_xacml_editor', 'api/includes/xacml');
+
 /**
  * Implements hook_islandora_ingest_steps
  */
@@ -33,6 +37,7 @@ function airs_xacml_apply_policy(&$form_state) {
   $xacml = new IslandoraXacml($object);
 
   dpm($form_state);
+  dpm($xacml);
 
   // allow the user to view and manage the file
   // the administrative role gets this by default
@@ -72,14 +77,14 @@ function airs_xacml_apply_policy(&$form_state) {
               $xacml->managementRule->addRole(array($subthemeID));
             } else if (substr($theme, 0, 5) == 'Theme') {
               $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
-            } else {
-              dpm($theme.' is not a valid subtheme');
-            } 
+            }
           } 
         }
       break;
     }
   }
   // save the policy
+  dpm($xacml->viewingRule);
+  dpm($xacml->managementRule);
   $xacml->writeBackToFedora();
 }
