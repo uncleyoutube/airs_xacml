@@ -1,5 +1,5 @@
 name = AIRS XACML
-description = Sets each file's permissions based on the privacy setting chosen.
+description = Sets each file's permissions based on the privacy setting chosen. test
 package = Islandora
 version = "7.x-0.9"
 core = "7.x"
