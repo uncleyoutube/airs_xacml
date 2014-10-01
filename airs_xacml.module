@@ -84,7 +84,5 @@ function airs_xacml_apply_policy(&$form_state) {
     }
   }
   // save the policy
-  dpm($xacml->viewingRule);
-  dpm($xacml->managementRule);
   $xacml->writeBackToFedora();
 }
