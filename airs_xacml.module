@@ -72,14 +72,15 @@ function airs_xacml_apply_policy(&$form_state) {
               $xacml->managementRule->addRole(array($subthemeID));
             } else if (substr($theme, 0, 5) == 'Theme') {
               $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
-            } else {
-              dpm($theme.' is not a valid subtheme');
-            } 
+            }
           } 
         }
       break;
     }
   }
+  dpm($xacml->viewingRule);
+  dpm($xacml->managementRule);
+
   // save the policy
   $xacml->writeBackToFedora();
 }
