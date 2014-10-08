@@ -1,5 +1,12 @@
 <?php
 
+//module_load_include('inc', 'islandora_xacml_editor', 'xacml');
+//module_load_include('inc', 'islandora_xacml_editor', 'islandora_xacml');
+
+module_load_include('inc', 'islandora_xacml_api', 'xacml');
+module_load_include('inc', 'islandora_xacml_api', 'islandora_xacml');
+
+
 /**
  * Implements hook_islandora_ingest_steps
  */
@@ -7,7 +14,7 @@ function airs_xacml_islandora_ingest_steps(array $form_state) {
   return array(
     'airs_xacml_policy' => array(
       'type'=> 'callback',
-      'weight' => 9, 
+      'weight' => 20, 
       'module' => 'airs_xacml',
       'do_function' => array(
         'function' => 'airs_xacml_apply_policy',
@@ -37,7 +44,18 @@ function airs_xacml_apply_policy(&$form_state) {
   // allow the user to view and manage the file
   // the administrative role gets this by default
   $xacml->viewingRule->addUser(array($user->name));
+   if ($xacml->viewingRule->isPopulated()) {
+    dpm('viewingRule is populated');
+  } else {
+    dpm('viewingRule is not populated');
+  } 
+
   $xacml->managementRule->addUser(array($user->name));
+  if ($xacml->managementRule->isPopulated()) {
+    dpm('managementRule is populated');
+  } else {
+    dpm('managementRule is not populated');
+  }
 
   if ($userAccess != 'User only') {
     // grabs all users listed as collaborators
