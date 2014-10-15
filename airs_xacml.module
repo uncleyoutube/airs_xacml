@@ -1,39 +1,12 @@
 <?php
 
-//module_load_include('inc', 'islandora_xacml_editor', 'xacml');
-//module_load_include('inc', 'islandora_xacml_editor', 'islandora_xacml');
-
 module_load_include('inc', 'islandora_xacml_api', 'xacml');
 module_load_include('inc', 'islandora_xacml_api', 'islandora_xacml');
-
-
-/**
- * Implements hook_islandora_ingest_steps
- */
-/*
-function airs_xacml_islandora_ingest_steps(array $form_state) {
-  return array(
-    'airs_xacml_policy' => array(
-      'type'=> 'callback',
-      'weight' => 20, 
-      'module' => 'airs_xacml',
-      'do_function' => array(
-        'function' => 'airs_xacml_apply_policy',
-        'args' => array(),
-      ),
-      'undo_function' => array(
-        'function' => 'islandora_xacml_editor_undo_policy',
-        'args' => array(),
-      ),
-    ),
-  );
-}*/
 
 /**
  * Implements hook_islandora_object_ingested
  */
 function airs_xacml_islandora_object_ingested($object) {
-  dpm($object['MODS']->getContent(''));
   $mods = new SimpleXMLElement($object['MODS']->getContent(''));
   airs_xacml_apply_policy($mods, $object);
 }
@@ -41,11 +14,8 @@ function airs_xacml_islandora_object_ingested($object) {
 function airs_xacml_apply_policy($mods, $object) {
   // DECLARATIONS
   global $user;
-//  $userAccess = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['userAccess'];
-//  $contributors = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['contributors'];
-//  $themes = $form_state['islandora']['step_storage']['xml_form_builder_metadata_step']['values']['themes-tags'];
-//  $object = $form_state['islandora']['objects'][0];
 
+  // decalaring $userAccess
   foreach ($mods->accessCondition as $access) {
     switch((string) $access['type']) {
     case 'restriction on access':
@@ -54,6 +24,7 @@ function airs_xacml_apply_policy($mods, $object) {
     }
   }
 
+  // declaring $contributors
   $n=0;
   foreach ($mods->name as $name) {
     switch((string) $name['type']) {
@@ -66,6 +37,7 @@ function airs_xacml_apply_policy($mods, $object) {
     }
   }
 
+  // declaring $themes
   $t=0;
   foreach ($mods->genre as $genre) {
     switch((string) $genre['type']) {
@@ -76,28 +48,13 @@ function airs_xacml_apply_policy($mods, $object) {
     }
   }
 
-  dpm($userAccess);
-  dpm($contributors);
-  dpm($themes); 
-
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
 
   // allow the user to view and manage the file
   // the administrative role gets this by default
   $xacml->viewingRule->addUser(array($user->name));
-   if ($xacml->viewingRule->isPopulated()) {
-    dpm('viewingRule is populated');
-  } else {
-    dpm('viewingRule is not populated');
-  } 
-
   $xacml->managementRule->addUser(array($user->name));
-  if ($xacml->managementRule->isPopulated()) {
-    dpm('managementRule is populated');
-  } else {
-    dpm('managementRule is not populated');
-  }
 
   if ($userAccess != 'User only') {
     // grabs all users listed as collaborators
@@ -130,8 +87,6 @@ function airs_xacml_apply_policy($mods, $object) {
               $subthemeID = 'st'.substr($theme, 9, 3); 
               $xacml->viewingRule->addRole(array($subthemeID));
               $xacml->managementRule->addRole(array($subthemeID));
-            } else if (substr($theme, 0, 5) == 'Theme') {
-              $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
             }
           } 
         }
@@ -141,43 +96,3 @@ function airs_xacml_apply_policy($mods, $object) {
   // save the policy
   $xacml->writeBackToFedora();
 }
-
-function airs_xacml_apply_policy_test($mods) {
-  dpm('Definitely in airs_xacml_apply_policy_test()');
-
-  foreach ($mods->accessCondition as $access) {
-    switch((string) $access['type']) {
-    case 'restriction on access':
-      $userAccess = (string)$access;
-      break;
-    }
-  }
-
-  $n=0;
-  foreach ($mods->name as $name) {
-    switch((string) $name['type']) {
-    case 'personal':
-      foreach($name->namePart as $namePart) {
-        $contributors[$n] = (string)$namePart;
-        $n++;
-      }
-      break;
-    }
-  }
-
-  $t=0;
-  foreach ($mods->genre as $genre) {
-    switch((string) $genre['type']) {
-    case 'themes':
-      $themes[$t] = (string)$genre;
-      $t++;
-      break;
-    }
-  }
-
-  dpm($userAccess);
-  dpm($contributors);
-  dpm($themes);
-}
-
-
