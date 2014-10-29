@@ -101,7 +101,7 @@ function airs_xacml_apply_policy($mods, $object, $created) {
       case 'My sub-theme':
         // returns all themes listed in the AIRS Themes field
         foreach ($themes as $theme) {
-          // checks if the listing is a string, then if begins with Subtheme or Theme
+          // checks if the listing is a string, then if begins with Subtheme
           if (is_string($theme) && strlen($theme) > 5) {
             if (substr($theme, 0, 8) == 'Subtheme') { 
               $subthemeID = 'st'.substr($theme, 9, 3); 
