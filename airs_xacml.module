@@ -1,17 +1,29 @@
 <?php
 
-module_load_include('inc', 'islandora_xacml_api', 'xacml');
-module_load_include('inc', 'islandora_xacml_api', 'islandora_xacml');
+//module_load_include('inc', 'islandora_xacml_api', 'xacml');
+//module_load_include('inc', 'islandora_xacml_api', 'islandora_xacml');
 
 /**
  * Implements hook_islandora_object_ingested
  */
 function airs_xacml_islandora_object_ingested($object) {
   $mods = new SimpleXMLElement($object['MODS']->getContent(''));
-  airs_xacml_apply_policy($mods, $object);
+  airs_xacml_apply_policy($mods, $object, 0);
 }
 
-function airs_xacml_apply_policy($mods, $object) {
+/**
+ * Implements hook_islandora_datastream_modified
+ */
+
+/*
+function airs_xacml_islandora_datastream_modified($object, $datastream) {
+  dpm($datastream->getContent(''));
+  $mods = new SimpleXMLElement($datastream->getContent(''));
+  //islandora_xacml_editor_undo_policy($object);
+  airs_xacml_apply_policy($mods, $object, 1); 
+}*/
+
+function airs_xacml_apply_policy($mods, $object, $created) {
   // DECLARATIONS
   global $user;
 
@@ -51,10 +63,12 @@ function airs_xacml_apply_policy($mods, $object) {
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
 
-  // allow the user to view and manage the file
-  // the administrative role gets this by default
-  $xacml->viewingRule->addUser(array($user->name));
-  $xacml->managementRule->addUser(array($user->name));
+  if ($created == 0) {
+    // allow the user to view and manage the file
+    // the administrative role gets this by default
+    $xacml->viewingRule->addUser(array($user->name, 'site administrator'));
+    $xacml->managementRule->addUser(array($user->name, 'site administrator'));
+  }
 
   if ($userAccess != 'User only') {
     // grabs all users listed as collaborators
@@ -67,10 +81,16 @@ function airs_xacml_apply_policy($mods, $object) {
     switch($userAccess) {
       case 'Public':
         $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
+        if (airs_xacml_is_collection($object)) {
+          $xacml->managementRule->addRole(array('authenticated user'));
+        }
         break;
 
       case 'Registered users':
         $xacml->viewingRule->addRole(array('authenticated user'));
+        if (airs_xacml_is_collection($object)) {
+          $xacml->managementRule->addRole(array('authenticated user'));
+        }
         break;
 
      /**
@@ -95,4 +115,12 @@ function airs_xacml_apply_policy($mods, $object) {
   }
   // save the policy
   $xacml->writeBackToFedora();
+}
+
+function airs_xacml_is_collection($object) {
+  if (strcmp($object->models[0], 'islandora:collectionCModel') == 0) {
+    return true;
+  } else {
+    return false;
+  }
 }
