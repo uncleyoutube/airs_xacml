@@ -15,13 +15,15 @@ function airs_xacml_islandora_object_ingested($object) {
  * Implements hook_islandora_datastream_modified
  */
 
-/*
+
 function airs_xacml_islandora_datastream_modified($object, $datastream) {
-  dpm($datastream->getContent(''));
-  $mods = new SimpleXMLElement($datastream->getContent(''));
+  //dpm($datastream->getContent(''));
+  $repository = $connection->repository;
+  $repository->api->a->listDatastreams($object);
+  //$mods = new SimpleXMLElement($datastream->getContent(''));
   //islandora_xacml_editor_undo_policy($object);
-  airs_xacml_apply_policy($mods, $object, 1); 
-}*/
+  //airs_xacml_apply_policy($mods, $object, 1); 
+}
 
 function airs_xacml_apply_policy($mods, $object, $created) {
   // DECLARATIONS
@@ -82,14 +84,14 @@ function airs_xacml_apply_policy($mods, $object, $created) {
       case 'Public':
         $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
         if (airs_xacml_is_collection($object)) {
-          $xacml->managementRule->addRole(array('authenticated user'));
+          $xacml->managementRule->addRole(array('Member'));
         }
         break;
 
       case 'Registered users':
         $xacml->viewingRule->addRole(array('authenticated user'));
         if (airs_xacml_is_collection($object)) {
-          $xacml->managementRule->addRole(array('authenticated user'));
+          $xacml->managementRule->addRole(array('Member'));
         }
         break;
 
