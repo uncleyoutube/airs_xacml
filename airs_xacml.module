@@ -1,8 +1,5 @@
 <?php
 
-//module_load_include('inc', 'islandora_xacml_api', 'xacml');
-//module_load_include('inc', 'islandora_xacml_api', 'islandora_xacml');
-
 /**
  * Implements hook_islandora_object_ingested
  */
@@ -15,13 +12,18 @@ function airs_xacml_islandora_object_ingested($object) {
  * Implements hook_islandora_datastream_modified
  */
 
-/*
+
 function airs_xacml_islandora_datastream_modified($object, $datastream) {
-  //dpm($datastream->getContent(''));
+  /*foreach ($object as $datastream) {
+    strtoupper($datastream->id);
+    $datastream->label = "new label";
+    $datastream_content = $datastream->getContent();
+  }*/
+
   //$mods = new SimpleXMLElement($datastream->getContent(''));
   //islandora_xacml_editor_undo_policy($object);
   //airs_xacml_apply_policy($mods, $object, 1); 
-}*/
+}
 
 function airs_xacml_apply_policy($mods, $object, $created) {
   // DECLARATIONS
