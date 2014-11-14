@@ -5,27 +5,21 @@
  */
 function airs_xacml_islandora_object_ingested($object) {
   $mods = new SimpleXMLElement($object['MODS']->getContent(''));
-  airs_xacml_apply_policy($mods, $object, 0);
+  airs_xacml_apply_policy($mods, $object);
 }
 
 /**
  * Implements hook_islandora_datastream_modified
  */
 
-
 function airs_xacml_islandora_datastream_modified($object, $datastream) {
-  /*foreach ($object as $datastream) {
-    strtoupper($datastream->id);
-    $datastream->label = "new label";
-    $datastream_content = $datastream->getContent();
-  }*/
-
-  //$mods = new SimpleXMLElement($datastream->getContent(''));
-  //islandora_xacml_editor_undo_policy($object);
-  //airs_xacml_apply_policy($mods, $object, 1); 
+  $mods = new SimpleXMLElement($object['MODS']->getContent(''));
+  if (isset($object['POLICY']))
+    $object->purgeDatastream('POLICY');
+  airs_xacml_apply_policy($mods, $object);
 }
 
-function airs_xacml_apply_policy($mods, $object, $created) {
+function airs_xacml_apply_policy($mods, $object) {
   // DECLARATIONS
   global $user;
 
@@ -65,12 +59,10 @@ function airs_xacml_apply_policy($mods, $object, $created) {
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
 
-  if ($created == 0) {
-    // allow the user to view and manage the file
-    // the administrative role gets this by default
-    $xacml->viewingRule->addUser(array($user->name, 'site administrator'));
-    $xacml->managementRule->addUser(array($user->name, 'site administrator'));
-  }
+  // allow the user to view and manage the file
+  // the administrative role gets this by default
+  $xacml->viewingRule->addUser(array($object->owner));
+  $xacml->managementRule->addUser(array($object->owner)); 
 
   if ($userAccess != 'User only') {
     // grabs all users listed as collaborators
