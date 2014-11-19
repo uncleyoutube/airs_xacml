@@ -3,7 +3,6 @@
  * Implements hook_islandora_object_ingested
  */
 function airs_xacml_islandora_object_ingested($object) {
-  dpm('you\'ve ingested something');
   $mods = new SimpleXMLElement($object['MODS']->getContent(''));
   airs_xacml_apply_policy($mods, $object);
 }
@@ -13,17 +12,20 @@ function airs_xacml_islandora_object_ingested($object) {
  */
 function airs_xacml_islandora_datastream_modified($object, $datastream) {
   if ($datastream->label === 'MODS Record') { 
-    dpm('you\'ve edited the mods of something');
-    dpm($datastream->id);
-//    $mods = new SimpleXMLElement($object['MODS']->getContent(''));
-//    $object->purgeDatastream('POLICY'); // 90% sure this is what breaks everything
-//    airs_xacml_apply_policy($mods, $object);
+    dpm('copying mods');
+    $mods = new SimpleXMLElement($object['MODS']->getContent(''));
+    dpm('copied mods');
+    if (isset($object['POLICY'])) 
+      $object->purgeDatastream('POLICY'); // this is what breaks everything
+    airs_xacml_apply_policy($mods, $object);
   }
 }
 
 function airs_xacml_apply_policy($mods, $object) {
   // DECLARATIONS
   global $user;
+
+  dpm('declaring $userAccess');
 
   // decalaring $userAccess
   foreach ($mods->accessCondition as $access) {
@@ -33,6 +35,8 @@ function airs_xacml_apply_policy($mods, $object) {
       break;
     }
   }
+
+  dpm('declaring $contributors');
 
   // declaring $contributors
   $n=0;
@@ -47,6 +51,8 @@ function airs_xacml_apply_policy($mods, $object) {
     }
   }
 
+  dpm('declaring $themes');
+
   // declaring $themes
   $t=0;
   foreach ($mods->genre as $genre) {
@@ -58,24 +64,33 @@ function airs_xacml_apply_policy($mods, $object) {
     }
   }
 
+  dpm('creating new xacml obj');
+
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
+
+  dpm('created new xacml obj');
 
   // allow the user to view and manage the file
   // the administrative role gets this by default
   $xacml->viewingRule->addUser(array($object->owner));
   $xacml->managementRule->addUser(array($object->owner)); 
 
+  dpm('added owner to rules');
+
   if ($userAccess != 'User only') {
+    dpm('is not user only');
     // grabs all users listed as collaborators
     foreach ($contributors as $name) {
       $xacml->viewingRule->addUser(array($name));
       $xacml->managementRule->addUser(array($name));
     }
 
+    dpm('switch block');
     // use the userAccess field of the form to determine extra permissions
     switch($userAccess) {
       case 'Public':
+        dpm('public');
         $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
         if (airs_xacml_is_collection($object)) {
           $xacml->managementRule->addRole(array('Member'));
@@ -83,18 +98,15 @@ function airs_xacml_apply_policy($mods, $object) {
         break;
 
       case 'Registered users':
+        dpm('registered');
         $xacml->viewingRule->addRole(array('authenticated user'));
         if (airs_xacml_is_collection($object)) {
           $xacml->managementRule->addRole(array('Member'));
         }
         break;
 
-     /**
-      * In the case of 'My sub-theme', if the uploader chooses one of the main
-      *  themes (e.g. Theme 1, 2, 3), the file is publicly viewable, with management
-      *  permissions for everyone in any subtheme chosen.
-      */
       case 'My sub-theme':
+        dpm('my sub-theme');
         // returns all themes listed in the AIRS Themes field
         foreach ($themes as $theme) {
           // checks if the listing is a string, then if begins with Subtheme
@@ -108,9 +120,11 @@ function airs_xacml_apply_policy($mods, $object) {
         }
       break;
     }
-  }
+  } else { dpm('is user only'); }
   // save the policy
+  dpm('before policy save');
   $xacml->writeBackToFedora();
+  dpm('after policy save');
 }
 
 function airs_xacml_is_collection($object) {
