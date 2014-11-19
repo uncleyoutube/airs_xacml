@@ -16,7 +16,7 @@ function airs_xacml_islandora_datastream_modified($object, $datastream) {
     $mods = new SimpleXMLElement($object['MODS']->getContent(''));
     dpm('copied mods');
     if (isset($object['POLICY'])) 
-      $object->purgeDatastream('POLICY'); // this is what breaks everything
+      $object->purgeDatastream('POLICY');
     airs_xacml_apply_policy($mods, $object);
   }
 }
