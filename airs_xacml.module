@@ -4,22 +4,24 @@
  */
 function airs_xacml_islandora_object_ingested($object) {
   $mods = new SimpleXMLElement($object['MODS']->getContent(''));
+  airs_xacml_parent_info($mods, $object);
+}
+
+function airs_xacml_parent_info($mods, $object) {
+  dpm($object->getParents());
   airs_xacml_apply_policy($mods, $object);
 }
 
 /**
  * Implements hook_islandora_datastream_modified
  */
+/*
 function airs_xacml_islandora_datastream_modified($object, $datastream) {
   if ($datastream->label === 'MODS Record') { 
-    dpm('copying mods');
     $mods = new SimpleXMLElement($object['MODS']->getContent(''));
-    dpm('copied mods');
-    if (isset($object['POLICY'])) 
-      $object->purgeDatastream('POLICY'); // this is what breaks everything
     airs_xacml_apply_policy($mods, $object);
   }
-}
+}*/
 
 function airs_xacml_apply_policy($mods, $object) {
   // DECLARATIONS
@@ -73,8 +75,8 @@ function airs_xacml_apply_policy($mods, $object) {
 
   // allow the user to view and manage the file
   // the administrative role gets this by default
-  $xacml->viewingRule->addUser(array($object->owner));
-  $xacml->managementRule->addUser(array($object->owner)); 
+  $xacml->viewingRule->addUser(array($object->owner, 'admin'));
+  $xacml->managementRule->addUser(array($object->owner, 'administrator')); 
 
   dpm('added owner to rules');
 
@@ -123,6 +125,7 @@ function airs_xacml_apply_policy($mods, $object) {
   } else { dpm('is user only'); }
   // save the policy
   dpm('before policy save');
+  //sleep(30);
   $xacml->writeBackToFedora();
   dpm('after policy save');
 }
