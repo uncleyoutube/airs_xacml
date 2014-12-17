@@ -12,13 +12,14 @@ function airs_xacml_islandora_object_ingested($object) {
  */
 
 function airs_xacml_islandora_datastream_modified($object, $datastream) {
+  $xmlPath = drupal_get_path('module', 'airs_xacml');
   if ($datastream->label === 'MODS Record') { 
     $mods = new SimpleXMLElement($object['MODS']->getContent(''));
     $dsid = 'POLICY';
     $datastream2 = isset($object[$dsid]) ? $object[$dsid] : $object->constructDatastream($dsid);
     $datastream2->label = 'XACML Policy Stream';
     $datastream2->mimeType = 'text/xml';
-    $datastream2->setContentFromString(airs_xacml_xml_string());
+    $datastream2->setContentFromFile($xmlPath.'/XACML Policy Stream.xml');
     $object->ingestDatastream($datastream2);
     $object->refresh();
     airs_xacml_apply_policy($mods, $object);
@@ -119,33 +120,4 @@ function airs_xacml_is_collection($object) {
   } else {
     return false;
   }
-}
-
-function airs_xacml_xml_string() {
-return '<Policy xmlns="urn:oasis:names:tc:xacml:1.0:policy" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" PolicyId="islandora-xacml-editor-v1" RuleCombiningAlgId="urn:oasis:names:tc:xacml:1.0:rule-combining-algorithm:first-applicable">
-  <Target>
-    <Subjects>
-      <AnySubject></AnySubject>
-    </Subjects>
-    <Resources>
-      <AnyResource></AnyResource>
-    </Resources>
-    <Actions>
-      <AnyAction></AnyAction>
-    </Actions>
-  </Target>
-  <Rule Effect="Permit" RuleId="allow-everything-else">
-    <Target>
-      <Subjects>
-        <AnySubject></AnySubject>
-      </Subjects>
-      <Resources>
-        <AnyResource></AnyResource>
-      </Resources>
-      <Actions>
-        <AnyAction></AnyAction>
-      </Actions>
-    </Target>
-  </Rule>
-</Policy>';
 }
