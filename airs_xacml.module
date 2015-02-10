@@ -81,7 +81,6 @@ function airs_xacml_apply_policy($mods, $object) {
     // use the userAccess field of the form to determine extra permissions
     switch($userAccess) {
       case 'Public':
-        dpm('public');
         $xacml->viewingRule->addRole(array('anonymous user', 'authenticated user'));
         if (airs_xacml_is_collection($object)) {
           $xacml->managementRule->addRole(array('Member'));
