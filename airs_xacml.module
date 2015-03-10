@@ -129,6 +129,7 @@ function airs_xacml_is_collection($object) {
   }
 }
 
+// implements hook_islandora_form_alter
 function airs_xacml_form_alter(&$form, &$form_state, &$form_id) {
   dpm($form_id); // displays name of forms on the page
   dpm($form); // displays form information
