@@ -3,7 +3,15 @@
  * Implements hook_islandora_object_ingested
  */
 function airs_xacml_islandora_object_ingested($object) {
+  $xmlPath = drupal_get_path('module', 'airs_xacml');
   $mods = new SimpleXMLElement($object['MODS']->getContent(''));
+  $dsid = 'POLICY';
+  $datastream2 = isset($object[$dsid]) ? $object[$dsid] : $object->constructDatastream($dsid);
+  $datastream2->label = 'XACML Policy Stream';
+  $datastream2->mimeType = 'text/xml';
+  $datastream2->setContentFromFile($xmlPath.'/XACML Policy Stream.xml');
+  $object->ingestDatastream($datastream2);
+  $object->refresh();
   airs_xacml_apply_policy($mods, $object);
 }
 
@@ -69,7 +77,7 @@ function airs_xacml_apply_policy($mods, $object) {
   // allow the user to view and manage the file
   // the administrative role gets this by default
   $xacml->viewingRule->addUser(array($object->owner, 'admin'));
-  $xacml->managementRule->addUser(array($object->owner, 'administrator')); 
+  $xacml->managementRule->addUser(array($object->owner, 'admin')); 
 
   if ($userAccess != 'User only') {
     // grabs all users listed as collaborators
@@ -119,4 +127,9 @@ function airs_xacml_is_collection($object) {
   } else {
     return false;
   }
+}
+
+function airs_xacml_form_alter(&$form, &$form_state, &$form_id) {
+  dpm($form_id); // displays name of forms on the page
+  dpm($form); // displays form information
 }
