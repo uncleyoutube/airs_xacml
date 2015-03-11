@@ -3,25 +3,8 @@
  * Implements hook_islandora_object_ingested
  */
 function airs_xacml_islandora_object_ingested($object) {
-  $xmlPath = drupal_get_path('module', 'airs_xacml');
-  $mods = new SimpleXMLElement($object['MODS']->getContent(''));
-  $dsid = 'POLICY';
-  $datastream2 = isset($object[$dsid]) ? $object[$dsid] : $object->constructDatastream($dsid);
-  $datastream2->label = 'XACML Policy Stream';
-  $datastream2->mimeType = 'text/xml';
-  $datastream2->setContentFromFile($xmlPath.'/XACML Policy Stream.xml');
-  $object->ingestDatastream($datastream2);
-  $object->refresh();
-  airs_xacml_apply_policy($mods, $object);
-}
-
-/**
- * Implements hook_islandora_datastream_modified
- */
-
-function airs_xacml_islandora_datastream_modified($object, $datastream) {
-  $xmlPath = drupal_get_path('module', 'airs_xacml');
-  if ($datastream->label === 'MODS Record') { 
+  if ($object->models[0] != 'ir:citationCModel') {
+    $xmlPath = drupal_get_path('module', 'airs_xacml');
     $mods = new SimpleXMLElement($object['MODS']->getContent(''));
     $dsid = 'POLICY';
     $datastream2 = isset($object[$dsid]) ? $object[$dsid] : $object->constructDatastream($dsid);
@@ -34,42 +17,34 @@ function airs_xacml_islandora_datastream_modified($object, $datastream) {
   }
 }
 
+/**
+ * Implements hook_islandora_datastream_modified
+ */
+
+function airs_xacml_islandora_datastream_modified($object, $datastream) {
+  if ($object->models[0] != 'ir:citationCModel') {
+    $xmlPath = drupal_get_path('module', 'airs_xacml');
+    if ($datastream->label === 'MODS Record') { 
+      $mods = new SimpleXMLElement($object['MODS']->getContent(''));
+      $dsid = 'POLICY';
+      $datastream2 = isset($object[$dsid]) ? $object[$dsid] : $object->constructDatastream($dsid);
+      $datastream2->label = 'XACML Policy Stream';
+      $datastream2->mimeType = 'text/xml';
+      $datastream2->setContentFromFile($xmlPath.'/XACML Policy Stream.xml');
+      $object->ingestDatastream($datastream2);
+      $object->refresh();
+      airs_xacml_apply_policy($mods, $object);
+    }
+  }
+}
+
 function airs_xacml_apply_policy($mods, $object) {
   // DECLARATIONS
   global $user;
 
-  // decalaring $userAccess
-  foreach ($mods->accessCondition as $access) {
-    switch((string) $access['type']) {
-    case 'restriction on access':
-      $userAccess = (string)$access;
-      break;
-    }
-  }
-
-  // declaring $contributors
-  $n=0;
-  foreach ($mods->name as $name) {
-    switch((string) $name['type']) {
-    case 'personal':
-      foreach($name->namePart as $namePart) {
-        $contributors[$n] = (string)$namePart;
-        $n++;
-      }
-      break;
-    }
-  }
-
-  // declaring $themes
-  $t=0;
-  foreach ($mods->genre as $genre) {
-    switch((string) $genre['type']) {
-    case 'themes':
-      $themes[$t] = (string)$genre;
-      $t++;
-      break;
-    }
-  }
+  $userAccess = userAccess_declaration($mods, $object); 
+  $contributors = contributors_declaration($mods, $object);
+  $themes = themes_declaration($mods, $object);
 
   // create new IslandoraXacml object, link it to the object being ingested
   $xacml = new IslandoraXacml($object);
@@ -121,6 +96,48 @@ function airs_xacml_apply_policy($mods, $object) {
   $xacml->writeBackToFedora();
 }
 
+// designed to declare a $userAccess var
+function userAccess_declaration($mods, $object) {
+  foreach ($mods->accessCondition as $access) {
+    switch((string) $access['type']) {
+    case 'restriction on access':
+      $userAccess = (string)$access;
+      break;
+    }
+  }
+  return $userAccess;
+}
+
+// designed to declare a $contributors array
+function contributors_declaration($mods, $object) {
+  $n=0;
+  foreach ($mods->name as $name) {
+    switch((string) $name['type']) {
+    case 'personal':
+      foreach($name->namePart as $namePart) {
+        $contributors[$n] = (string)$namePart;
+        $n++;
+      }
+      break;
+    }
+  }
+  return $contributors;
+}
+
+// designed to declare $themes
+function themes_declaration($mods, $object) {
+  $t=0;
+  foreach ($mods->genre as $genre) {
+    switch((string) $genre['type']) {
+    case 'themes':
+      $themes[$t] = (string)$genre;
+      $t++;
+      break;
+    }
+  }
+  return $themes;
+}
+
 function airs_xacml_is_collection($object) {
   if (strcmp($object->models[0], 'islandora:collectionCModel') == 0) {
     return true;
@@ -132,5 +149,5 @@ function airs_xacml_is_collection($object) {
 // implements hook_islandora_form_alter
 function airs_xacml_form_alter(&$form, &$form_state, &$form_id) {
   dpm($form_id); // displays name of forms on the page
-  dpm($form); // displays form information
+  dpm($form); // displays form information  
 }
